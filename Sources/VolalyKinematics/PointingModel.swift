@@ -45,7 +45,8 @@ public class PointingModel: SurfaceDelegate, ObservableObject {
     private(set) public var shoulderToWristTf: Transform!
     private(set) public var wristToFingerTf: Transform!
 
-    private var subs: Set<AnyCancellable>
+    private var worldSub: AnyCancellable
+    private var imuSub: AnyCancellable
 
     private var worldTf: Transform {
         didSet {
@@ -137,7 +138,8 @@ public class PointingModel: SurfaceDelegate, ObservableObject {
     // MARK: Public methods
 
     public init(bodyHeight: Double, surface: Surface, pointWith: Handedness = .ignore) {
-        subs = []
+        worldSub = AnyCancellable({})
+        imuSub = AnyCancellable({})
 
         self.surface = surface
 
@@ -154,15 +156,11 @@ public class PointingModel: SurfaceDelegate, ObservableObject {
     }
 
     public func setWorldTransform(_ tf: AnyPublisher<Transform, Never>) {
-        tf
-            .sink { self.worldTf = $0 }
-            .store(in: &subs)
+        worldSub = tf.sink { self.worldTf = $0 }
     }
 
     public func setImuTransform(_ tf: AnyPublisher<Transform, Never>) {
-        tf
-            .sink { self.imuTf = $0 }
-            .store(in: &subs)
+        imuSub = tf.sink { self.imuTf = $0 }
     }
 
     public func surface(didUpdateParam param: String, with value: simd_double3?) {
