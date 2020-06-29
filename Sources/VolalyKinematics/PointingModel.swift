@@ -8,10 +8,11 @@
 
 import Foundation
 import simd
+import Combine
 
 import Transform
 
-public class PointingModel: SurfaceDelegate {
+public class PointingModel: SurfaceDelegate, ObservableObject {
     public enum Handedness {
         case ignore
         case leftHand
@@ -44,24 +45,45 @@ public class PointingModel: SurfaceDelegate {
     private(set) public var shoulderToWristTf: Transform!
     private(set) public var wristToFingerTf: Transform!
 
-    private var worldTf: Transform
-    private var imuTf: Transform
+    private var subs: Set<AnyCancellable>
 
-    private var rayTf: Transform?
-    private var pointerTf: Transform?
-    private var fingerTf: Transform?
+    private var worldTf: Transform {
+        didSet {
+            updateModel()
+        }
+    }
+    private var imuTf: Transform {
+        didSet {
+            updateModel()
+        }
+    }
+
+    private var rayTf: Transform? {
+        willSet {
+            self.ray = newValue
+        }
+    }
+    private var pointerTf: Transform? {
+        willSet {
+            self.pointer = newValue
+        }
+    }
+    private var fingerTf: Transform? {
+        willSet {
+            self.finger = newValue
+        }
+    }
 
     private(set) public var surface: Surface
 
-    public var ray: Transform? {
-        return rayTf
-    }
-    public var pointer: Transform? {
-        return pointerTf
-    }
-    public var finger: Transform? {
-        return fingerTf
-    }
+    @Published
+    public var ray: Transform?
+
+    @Published
+    public var pointer: Transform?
+
+    @Published
+    public var finger: Transform?
 
     private func kinematicsFrom(bodyHeight: Double) {
         // bodyHeight: 1.835 // 1.67
@@ -94,39 +116,7 @@ public class PointingModel: SurfaceDelegate {
                                       simd_double3(x: wristToFinger, y: 0, z: 0))
     }
 
-
-    /// Public methods
-
-    public init(bodyHeight: Double, surface: Surface, pointWith: Handedness = .ignore) {
-        self.surface = surface
-
-        imuTf = Transform.identity
-        worldTf = Transform.identity
-        self.pointWith = pointWith
-
-        self.surface.delegate = self
-
-        // Trick to trigger didSet() of bodyHeight
-        defer {
-            self.bodyHeight = bodyHeight
-        }
-    }
-
-    public func setWorldTransform(_ tf: Transform) {
-        worldTf = tf
-        updateModel()
-    }
-
-    public func setImuTransform(_ tf: Transform) {
-        imuTf = tf
-        updateModel()
-    }
-
-    public func surface(didUpdateParam param: String, with value: simd_double3?) {
-        self.updateModel()
-    }
-
-    public func updateModel() {
+    private func updateModel() {
         self.updateKinematics()
 
         let fingerTf = footprintToNeckTf * neckToShoulderTf * shoulderToWristTf * wristToFingerTf
@@ -142,5 +132,40 @@ public class PointingModel: SurfaceDelegate {
         self.rayTf = Transform(ray_yaw_rot * ray_pitch_rot, eyesTf.origin)
         self.pointerTf = surface.intersectWith(ray: rayTf!)
         self.fingerTf = fingerTf
+    }
+
+    // MARK: Public methods
+
+    public init(bodyHeight: Double, surface: Surface, pointWith: Handedness = .ignore) {
+        subs = []
+
+        self.surface = surface
+
+        imuTf = Transform.identity
+        worldTf = Transform.identity
+        self.pointWith = pointWith
+
+        self.surface.delegate = self
+
+        // Trick to trigger didSet() of bodyHeight
+        defer {
+            self.bodyHeight = bodyHeight
+        }
+    }
+
+    public func setWorldTransform(_ tf: AnyPublisher<Transform, Never>) {
+        tf
+            .sink { self.worldTf = $0 }
+            .store(in: &subs)
+    }
+
+    public func setImuTransform(_ tf: AnyPublisher<Transform, Never>) {
+        tf
+            .sink { self.imuTf = $0 }
+            .store(in: &subs)
+    }
+
+    public func surface(didUpdateParam param: String, with value: simd_double3?) {
+        self.updateModel()
     }
 }
