@@ -120,8 +120,8 @@ public class PointingModel: SurfaceDelegate, ObservableObject {
     private func updateModel() {
         self.updateKinematics()
 
-        let fingerTf = footprintToNeckTf * neckToShoulderTf * shoulderToWristTf * wristToFingerTf
-        let eyesTf = footprintToNeckTf * neckToEyesTf
+        let fingerTf = worldTf * footprintToNeckTf * neckToShoulderTf * shoulderToWristTf * wristToFingerTf
+        let eyesTf = worldTf * footprintToNeckTf * neckToEyesTf
 
         let ray_vec = simd_normalize(fingerTf.origin - eyesTf.origin)
         let ray_yaw_rot = simd_quatd(roll: 0.0, pitch: 0.0, yaw: atan2(ray_vec.y, ray_vec.x))
