@@ -137,7 +137,7 @@ public class PointingModel: SurfaceDelegate, ObservableObject {
 
     // MARK: Public methods
 
-    public init(bodyHeight: Double, surface: Surface, pointWith: Handedness = .ignore) {
+    public init(bodyHeight: Double, surface: Surface = HorizontalPlane(point: .zero), pointWith: Handedness = .ignore) {
         worldSub = AnyCancellable({})
         imuSub = AnyCancellable({})
 
