@@ -75,7 +75,11 @@ public class PointingModel: SurfaceDelegate, ObservableObject {
         }
     }
 
-    private(set) public var surface: Surface
+    public var surface: Surface {
+        didSet {
+            updateModel()
+        }
+    }
 
     @Published
     public var ray: Transform?
