@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "VolalyKinematicsSwift",
+    name: "VolalyKinematics",
     platforms: [.iOS(.v13)],
     products: [
         .library(name: "VolalyKinematics", targets: ["VolalyKinematics"]),
