@@ -1,6 +1,6 @@
 //
 //  Surface.swift
-//  VolalyPointer
+//  VolalyKinematics
 //
 //  Created by Boris Gromov on 01/08/2019.
 //  Copyright © 2019 Volaly. All rights reserved.
