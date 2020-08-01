@@ -168,6 +168,8 @@ public class PointingModel: SurfaceDelegate, ObservableObject {
     }
 
     public func surface(didUpdateParam param: String, with value: simd_double3?) {
-        self.updateModel()
+        DispatchQueue.main.async {
+            self.updateModel()
+        }
     }
 }
