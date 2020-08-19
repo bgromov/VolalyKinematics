@@ -10,7 +10,7 @@ let package = Package(
         .library(name: "VolalyKinematics", targets: ["VolalyKinematics"]),
     ],
     dependencies: [
-         .package(url: "https://github.com/bgromov/TransformSwift", from: "0.1.0"),
+         .package(url: "https://github.com/bgromov/TransformSwift.git", from: "0.1.0"),
     ],
     targets: [
         .target(
